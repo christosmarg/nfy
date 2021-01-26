@@ -3,13 +3,30 @@
 .Os
 .Sh NAME
 .Nm nfy
-.Nd a minimal notification program for X
+.Nd a minimal and daemonless notification program for X
 .Sh SYNOPSIS
 .Nm
 .Ar str...
 .Sh DESCRIPTION
 .Nm
 creates a temporary notification popup window and displays
-all the arguments that were passed to it.
+all the arguments that were passed to it. It uses the
+.Xr Xft 3
+library to render fonts and colors, and
+.Xr Xrandr 3
+to handle screen sizes. All configuration is done by
+editing the 'config.h' file in the source code.
+.Sh USAGE
+If the string is not surrounded in quotes,
+.Nm
+will print one line for each word.
+.Sh SIGNALS
+.Nm
+handles only SIGALRM, SIGTERM and SIGINT. It receives a
+SIGALRM signal by default after the specified duration 
+of the notification.
+.Sh SEE ALSO
+.Xr signal 3 ,
+.Xr alarm 3
 .Sh AUTHORS
 .An Christos Margiolis Aq Mt christos@christosmarg.xyz

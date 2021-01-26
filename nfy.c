@@ -1,3 +1,4 @@
+/* See LICENSE file for copyright and license details. */
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrandr.h>
 
 #include "config.h"
 
@@ -51,6 +53,8 @@ main(int argc, char *argv[])
         XftColor color;
         XftFont *font;
         XftDraw *drw;
+        XRRScreenResources *screens;
+        XRRCrtcInfo *info = NULL;
         struct sigaction sig;
         int scr, scrw, scrh;
         int x, y, w, h, th;
@@ -61,10 +65,15 @@ main(int argc, char *argv[])
 
         if (!(dpy = XOpenDisplay(NULL)))
                 die("cannot open display");
+
         scr = DefaultScreen(dpy);
+        screens = XRRGetScreenResources(dpy, RootWindow(dpy, scr));
+        info = XRRGetCrtcInfo(dpy, screens, screens->crtcs[0]);
+        scrw = info->width;
+        scrh = info->height;
+
         vis = DefaultVisual(dpy, scr);
         colormap = DefaultColormap(dpy, scr);
-
         XftColorAllocName(dpy, vis, colormap, bgcol, &color);
         attrs.background_pixel = color.pixel;
         XftColorAllocName(dpy, vis, colormap, bordercol, &color);
@@ -85,29 +94,27 @@ main(int argc, char *argv[])
                         w = len;
         }
 
-        w = w * (font->descent << 1) + borderw;
-        h = (th + (borderw << 2)) * argc;
-        scrw = DisplayWidth(dpy, scr);
-        scrh = DisplayHeight(dpy, scr);
+        w *= th + borderw;
+        h = th * (argc - 1) + (linespace * (argc - 2)) + (padding << 1);
 
         switch (pos) {
-                case TOP_LEFT:
-                        x = mx;
-                        y = my;
-                        break;
-                case TOP_RIGHT:
-                default:
-                        x = scrw - w - my;
-                        y = my;
-                        break;
-                case BOTTOM_LEFT:
-                        x = mx;
-                        y = scrh - h - my;
-                        break;
-                case BOTTOM_RIGHT:
-                        x = scrw - w - mx;
-                        y = scrh - h - my;
-                        break;
+        case TOP_LEFT:
+                x = mx;
+                y = my;
+                break;
+        case TOP_RIGHT:
+        default:
+                x = scrw - w - my;
+                y = my;
+                break;
+        case BOTTOM_LEFT:
+                x = mx;
+                y = scrh - h - my;
+                break;
+        case BOTTOM_RIGHT:
+                x = scrw - w - mx;
+                y = scrh - h - my;
+                break;
         }
         
         win = XCreateWindow(dpy, RootWindow(dpy, scr), x, y, w, h, borderw,
@@ -137,7 +144,7 @@ main(int argc, char *argv[])
                         XClearWindow(dpy, win);
                         for (i = 1; i < argc; i++)
                                 XftDrawStringUtf8(drw, &color, font,
-                                        borderw, (th + (borderw << 2)) * i,
+                                        w >> 3, linespace * (i - 1) + th * i + padding,
                                         (FcChar8 *)argv[i], strlen(argv[i]));
                 } else if (ev.type == ButtonPress)
                         break;
@@ -146,6 +153,8 @@ main(int argc, char *argv[])
         XftDrawDestroy(drw);
         XftColorFree(dpy, vis, colormap, &color);
         XftFontClose(dpy, font);
+        XRRFreeCrtcInfo(info);
+        XRRFreeScreenResources(screens);
         XCloseDisplay(dpy);
 
         return 0;
