@@ -20,4 +20,6 @@ setup and preferences.
 
 nfy will be installed in /usr/local/bin by default.
 Configuration is done by editing config.h and recompiling
-the source code. Read the manpage for more.
+the source code.
+
+Read the manpage for more.

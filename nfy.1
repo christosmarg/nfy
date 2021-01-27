@@ -1,4 +1,4 @@
-.Dd nfy\-VERSRION
+.Dd nfy\-VERSION
 .Dt NFY 1
 .Os
 .Sh NAME
@@ -8,18 +8,31 @@
 .Nm
 .Ar str...
 .Sh DESCRIPTION
+.Pp
 .Nm
 creates a temporary notification popup window and displays
 all the arguments that were passed to it. It uses the
 .Xr Xft 3
 library to render fonts and colors, and
 .Xr Xrandr 3
-to handle screen sizes. All configuration is done by
+to handle screen sizes.
+.Pp
+All configuration is done by
 editing the 'config.h' file in the source code.
 .Sh USAGE
+.Pp
 If the string is not surrounded in quotes,
 .Nm
 will print one line for each word.
+.Pp
+.Nm
+has a non-blocking behaviour, meaning that commands
+coming after it can execute normally without them having
+to wait for 
+.Nm
+to finish first. This is helpful since it's a notification
+program and there's no reason to wait for the notification
+to die off before other commands can execute.
 .Sh SIGNALS
 .Nm
 handles only SIGALRM, SIGTERM and SIGINT. It receives a
