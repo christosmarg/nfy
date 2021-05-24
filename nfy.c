@@ -1,5 +1,5 @@
 /* See LICENSE file for copyright and license details. */
-#include <errno.h>
+#include <err.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -14,41 +14,27 @@
 
 #include "config.h"
 
-static void die(const char *, ...);
-static void recvalrm(int);
+static void sighandler(int);
 
 static char *argv0;
 static Display *dpy;
 static Window win;
 
 static void
-die(const char *fmt, ...)
-{
-	va_list args;
-
-	fprintf(stderr, "%s: ", argv0);
-	
-	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
-	va_end(args);
-
-	if (fmt[0] && fmt[strlen(fmt)-1] == ':') {
-		fputc(' ', stderr);
-		perror(NULL);
-	} else
-		fputc('\n', stderr);
-
-	exit(EXIT_FAILURE);
-}
-
-static void
-recvalrm(int sig)
+sighandler(int sig)
 {
 	XEvent ev;
 	
 	ev.type = ButtonPress;
 	XSendEvent(dpy, win, 0, 0, &ev);
 	XFlush(dpy);
+}
+
+static void
+usage(void)
+{
+	fprintf(stderr, "usage: %s [-v] str...\n", argv0);
+	exit(1);
 }
 
 int
@@ -63,34 +49,44 @@ main(int argc, char *argv[])
 	XftColor color;
 	XftDraw *drw;
 	XftFont *font;
+	struct flock fl;
 	struct sigaction sig;
 	pid_t pid;
 	int lockfd;
 	int scr, scrw, scrh;
 	int x, y, w, h, th;
-	int i, j, len;
+	int i, j, len, argi;
+	char ch;
 
 	argv0 = *argv;
-	if (argc < 2) {
-		fprintf(stderr, "usage: %s str...\n", argv0);
-		return 1;
+	if (argc < 2)
+		usage();
+	while ((ch = getopt(argc, argv, "v")) != -1) {
+		switch (ch) {
+		case 'v':
+			puts("nfy-"VERSION);
+			exit(0);
+		case '?':
+		default:
+			usage();
+		}
 	}
-
-	if ((lockfd = open(lockfile, O_CREAT | O_RDWR, 0600)) == -1)
-		die("open:");
-	if (!(dpy = XOpenDisplay(NULL)))
-		die("XOpenDisplay:");
+	/*argc -= optind;*/
+	/*argv += optind;*/
+	argi = optind;
 
 	if ((pid = fork()) < 0)
-		die("fork:");
+		err(1, "fork");
 	if (pid > 0)
-		exit(EXIT_SUCCESS);
+		_exit(0);
 	umask(0);
 	if (setsid() < 0)
-		die("setsid:");
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+		err(1, "setsid");
+
+	if ((lockfd = open(lockfile, O_CREAT | O_RDWR, 0600)) < 0)
+		err(1, "open");
+	if (!(dpy = XOpenDisplay(NULL)))
+		errx(1, "XOpenDisplay");
 
 	scr = DefaultScreen(dpy);
 	screens = XRRGetScreenResources(dpy, RootWindow(dpy, scr));
@@ -110,7 +106,7 @@ main(int argc, char *argv[])
 	th = font->ascent - font->descent;
 
 	w = 0;
-	for (i = 1; i < argc; i++) {
+	for (i = argi; i < argc; i++) {
 		len = strlen(argv[i]);
 		j = len;
 		while (j--)
@@ -154,26 +150,31 @@ main(int argc, char *argv[])
 	XSelectInput(dpy, win, ExposureMask | ButtonPress);
 	XMapWindow(dpy, win);
 
-	sig.sa_handler = recvalrm;
+	sig.sa_handler = sighandler;
 	sig.sa_flags = SA_RESTART;
-	sigemptyset(&sig.sa_mask);
-	sigaction(SIGALRM, &sig, 0);
-	sigaction(SIGTERM, &sig, 0);
-	sigaction(SIGINT, &sig, 0);
-	/* XXX: replace with just singal? */
+	(void)sigemptyset(&sig.sa_mask);
+	if (sigaction(SIGALRM, &sig, NULL) < 0)
+		err(1, "sigaction(SIGALRM)");
+	if (sigaction(SIGTERM, &sig, NULL) < 0)
+		err(1, "sigaction(SIGTERM)");
+	if (sigaction(SIGINT, &sig, NULL) < 0)
+		err(1, "sigaction(SIGINT)");
 
-	/* XXX: when being called from another process this one succeeds */
-	while (lockf(lockfd, F_LOCK, 0L) == -1)
-		;
+	fl.l_len = 0;
+	fl.l_start = 0;
+	fl.l_type = F_WRLCK;
+	fl.l_whence = SEEK_SET;
+	if (fcntl(lockfd, F_SETLKW, &fl) < 0)
+		err(1, "fcntl(F_SETLKW)");
+
 	if (duration > 0)
 		(void)alarm(duration);
 
 	for (;;) {
 		XNextEvent(dpy, &ev);
-
 		if (ev.type == Expose) {
 			XClearWindow(dpy, win);
-			for (i = 1; i < argc; i++)
+			for (i = argi; i < argc; i++)
 				XftDrawStringUtf8(drw, &color, font,
 				    w >> 3, linespace * (i - 1) + th * i + padding,
 				    (FcChar8 *)argv[i], strlen(argv[i]));
@@ -187,10 +188,7 @@ main(int argc, char *argv[])
 	XRRFreeCrtcInfo(info);
 	XRRFreeScreenResources(screens);
 	XCloseDisplay(dpy);
-
-	(void)lockf(lockfd, F_ULOCK, 0);
 	(void)close(lockfd);
-	(void)unlink(lockfile);
 
 	return 0;
 }
