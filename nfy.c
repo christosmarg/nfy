@@ -64,8 +64,8 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "v")) != -1) {
 		switch (ch) {
 		case 'v':
-			puts("nfy-"VERSION);
-			exit(0);
+			fprintf(stderr, "%s-"VERSION"\n", argv0);
+			exit(1);
 		case '?':
 		default:
 			usage();
