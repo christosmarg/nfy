@@ -1,10 +1,12 @@
 # See LICENSE file for copyright and license details.
 # nfy version
-VERSION = 0.1
+VERSION = 0.2
 
 # paths
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
+# OpenBSD
+#MANPREFIX = ${PREFIX}/man
 
 # includes and libs
 # FreeBSD

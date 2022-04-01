@@ -14,11 +14,38 @@
 
 #include "config.h"
 
+struct line {
+	char data[MAXLEN+1];
+	size_t len;
+};
+
+#undef strlcpy	/* compat with openbsd */
+size_t strlcpy(char *, const char *, size_t);
 static void sighandler(int);
 
 static char *argv0;
 static Display *dpy;
 static Window win;
+
+size_t
+strlcpy(char *dst, const char *src, size_t dsize)
+{
+	const char *osrc = src;
+	size_t nleft = dsize;
+
+	if (nleft != 0) {
+		while (--nleft != 0)
+			if ((*dst++ = *src++) == '\0')
+				break;
+	}
+	if (nleft == 0) {
+		if (dsize != 0)
+			*dst = '\0';
+		while (*src++)
+			;
+	}
+	return (src - osrc - 1);
+}
 
 static void
 sighandler(int sig)
@@ -49,18 +76,18 @@ main(int argc, char *argv[])
 	XftColor color;
 	XftDraw *drw;
 	XftFont *font;
+	XGlyphInfo gi;
 	struct flock fl;
-	struct sigaction sig;
+	struct sigaction sa;
+	struct line *lines, *lp;
 	pid_t pid;
 	int lockfd;
 	int scr, scrw, scrh;
-	int x, y, w, h, th;
-	int i, j, len, argi;
-	char ch;
+	int x, y, w = 0, h, th;
+	int i, len = 0, nlines = 0;
+	char buf[MAXLEN+1], ch;
 
 	argv0 = *argv;
-	if (argc < 2)
-		usage();
 	while ((ch = getopt(argc, argv, "v")) != -1) {
 		switch (ch) {
 		case 'v':
@@ -71,10 +98,10 @@ main(int argc, char *argv[])
 			usage();
 		}
 	}
-	/*argc -= optind;*/
-	/*argv += optind;*/
-	argi = optind;
+	argc -= optind;
+	argv += optind;
 
+	/* detach from tty */
 	if ((pid = fork()) < 0)
 		err(1, "fork");
 	if (pid > 0)
@@ -85,6 +112,8 @@ main(int argc, char *argv[])
 
 	if ((lockfd = open(lockfile, O_CREAT | O_RDWR, 0600)) < 0)
 		err(1, "open");
+
+	/* init x11 */
 	if (!(dpy = XOpenDisplay(NULL)))
 		errx(1, "XOpenDisplay");
 
@@ -106,38 +135,50 @@ main(int argc, char *argv[])
 	th = font->ascent - font->descent;
 	XftColorAllocName(dpy, vis, colormap, fontcolor, &color);
 
-	w = 0;
-	for (i = argi; i < argc; i++) {
-		len = strlen(argv[i]);
-		j = len;
-		while (j--)
-			if (**argv == '\n')
-				**argv++ = ' ';
-		/* TODO: handle maxlen */
-		if (len > w)
-			w = len;
+
+	/* read stdin into buffer */
+	if ((lines = malloc(sizeof(struct line))) == NULL)
+		err(1, "malloc");
+	while (read(STDIN_FILENO, &ch, 1) > 0) {
+		if (ch == '\n' || len == MAXLEN) {
+			buf[len] = '\0';
+			if ((lines = realloc(lines,
+			    (nlines + 1) * sizeof(struct line))) == NULL)
+				err(1, "realloc");
+			lp = &lines[nlines];
+			lp->len = len;
+			strlcpy(lp->data, buf, sizeof(lp->data));
+			/* determine window width based on largest line */
+			XftTextExtentsUtf8(dpy, font, (XftChar8 *)lp->data,
+			    lp->len, &gi);
+			if (gi.width > w)
+				w = gi.width;
+			nlines++;
+			len = 0;
+		} else
+			buf[len++] = ch;
 	}
+	w += padding * 2;
+	h = (nlines - 1) * linespace + nlines * th + 2 * padding;
 
-	w *= th + borderw;
-	h = th * (argc - 1) + (linespace * (argc - 2)) + (padding << 1);
-
+	/* calculate position coordinates */
 	switch (pos) {
 	case TOP_LEFT:
 		x = mx;
 		y = my;
 		break;
-	case TOP_RIGHT:
+	case TOP_RIGHT: /* FALLTHROUGH */
 	default:
-		x = scrw - w - my;
+		x = scrw - w - mx - borderw * 2;
 		y = my;
 		break;
 	case BOTTOM_LEFT:
 		x = mx;
-		y = scrh - h - my;
+		y = scrh - h - my - borderw * 2;
 		break;
 	case BOTTOM_RIGHT:
-		x = scrw - w - mx;
-		y = scrh - h - my;
+		x = scrw - w - mx - borderw * 2;
+		y = scrh - h - my - borderw * 2;
 		break;
 	}
 	
@@ -148,16 +189,17 @@ main(int argc, char *argv[])
 	XSelectInput(dpy, win, ExposureMask | ButtonPress);
 	XMapWindow(dpy, win);
 
-	sig.sa_handler = sighandler;
-	sig.sa_flags = SA_RESTART;
-	(void)sigfillset(&sig.sa_mask);
-	if (sigaction(SIGALRM, &sig, NULL) < 0)
+	sa.sa_handler = sighandler;
+	sa.sa_flags = SA_RESTART;
+	(void)sigfillset(&sa.sa_mask);
+	if (sigaction(SIGALRM, &sa, NULL) < 0)
 		err(1, "sigaction(SIGALRM)");
-	if (sigaction(SIGTERM, &sig, NULL) < 0)
+	if (sigaction(SIGTERM, &sa, NULL) < 0)
 		err(1, "sigaction(SIGTERM)");
-	if (sigaction(SIGINT, &sig, NULL) < 0)
+	if (sigaction(SIGINT, &sa, NULL) < 0)
 		err(1, "sigaction(SIGINT)");
 
+	/* setup lock file */
 	fl.l_len = 0;
 	fl.l_start = 0;
 	fl.l_type = F_WRLCK;
@@ -172,14 +214,16 @@ main(int argc, char *argv[])
 		XNextEvent(dpy, &ev);
 		if (ev.type == Expose) {
 			XClearWindow(dpy, win);
-			for (i = argi; i < argc; i++)
+			for (i = 0; i < nlines; i++)
 				XftDrawStringUtf8(drw, &color, font,
-				    w >> 3, linespace * (i - 1) + th * i + padding,
-				    (FcChar8 *)argv[i], strlen(argv[i]));
+				    padding,
+				    linespace * i + th * (i + 1) + padding,
+				    (XftChar8 *)lines[i].data, lines[i].len);
 		} else if (ev.type == ButtonPress)
 			break;
 	}
 
+	free(lines);
 	XftDrawDestroy(drw);
 	XftColorFree(dpy, vis, colormap, &color);
 	XftFontClose(dpy, font);
