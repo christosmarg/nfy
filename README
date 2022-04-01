@@ -1,10 +1,9 @@
 nfy
 ===
 
-nfy is a minimal and daemonless notification program for X.
-It creates a temporary notification popup window and displays
-all the arguments that were passed to it. Yes, it can queue
-notifications as well.
+nfy is a minimal and daemonless notification program for X. It reads input from
+stdin (only), creates a temporary popup window and display it. It can queue
+multiple notifications as well.
 
 Dependencies
 ------------
@@ -18,11 +17,9 @@ Usage
         $ nfy str...
 
 nfy will be installed in `/usr/local/bin` by default.
+
 Configuration is done by editing config.h and recompiling
 the source code.
-
-Configuration is done by editing `config.h` and recompiling the
-source code.
 
 Read the manpage for more.
 
