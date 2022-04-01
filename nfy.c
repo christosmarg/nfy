@@ -60,7 +60,7 @@ sighandler(int sig)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-v] str...\n", argv0);
+	fprintf(stderr, "usage: %s [-v]\n", argv0);
 	exit(1);
 }
 

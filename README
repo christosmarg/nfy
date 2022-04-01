@@ -16,7 +16,7 @@ Usage
 Make sure all settings in config.mk are set according to your system.
 
         # make install clean
-        $ nfy str...
+        $ echo foo | nfy
 
 nfy will be installed in `/usr/local/bin` by default.
 
