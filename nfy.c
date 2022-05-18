@@ -121,8 +121,8 @@ main(int argc, char *argv[])
 	if (setsid() < 0)
 		err(1, "setsid");
 
-	if ((lockfd = open(lockfile, O_CREAT | O_RDWR, 0600)) < 0)
-		err(1, "open");
+	if ((lockfd = open(lockfile, O_CREAT | O_WRONLY, 0600)) < 0)
+		err(1, "open(%s)", lockfile);
 
 	/* init x11 */
 	if (!(dpy = XOpenDisplay(NULL)))
@@ -145,7 +145,6 @@ main(int argc, char *argv[])
 	font = XftFontOpenName(dpy, scr, fonts);
 	th = font->ascent - font->descent;
 	XftColorAllocName(dpy, vis, colormap, fontcolor, &color);
-
 
 	/* read stdin into buffer */
 	if ((lines = malloc(sizeof(struct line))) == NULL)
