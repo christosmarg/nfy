@@ -243,7 +243,7 @@ main(int argc, char *argv[])
 	XRRFreeCrtcInfo(info);
 	XRRFreeScreenResources(screens);
 	XCloseDisplay(dpy);
-	(void)close(lockfd);
+	close(lockfd);
 
 	return (0);
 }
