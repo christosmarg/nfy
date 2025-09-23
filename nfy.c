@@ -151,7 +151,11 @@ main(int argc, char *argv[])
 	if ((lines = malloc(sizeof(struct line))) == NULL)
 		err(1, "malloc");
 	while (read(STDIN_FILENO, &ch, 1) > 0) {
+		buf[len++] = ch;
 		if (ch == '\n' || len == MAXLEN) {
+			/* FIXME: is this stupid? */
+			if (ch == '\n')
+				len--;
 			buf[len] = '\0';
 			if ((lines = realloc(lines,
 			    (nlines + 1) * sizeof(struct line))) == NULL)
@@ -166,8 +170,7 @@ main(int argc, char *argv[])
 				w = gi.width;
 			nlines++;
 			len = 0;
-		} else
-			buf[len++] = ch;
+		}
 	}
 	w += padding * 2;
 	h = (nlines - 1) * linespace + nlines * th + 2 * padding;
