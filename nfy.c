@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 	XEvent ev;
 	XRRCrtcInfo *info = NULL;
 	XRRScreenResources *screens;
-	XSetWindowAttributes attrs;
+	XSetWindowAttributes attrs = {0};
 	XftColor color;
 	XftDraw *drw;
 	XftFont *font;
@@ -104,6 +104,7 @@ main(int argc, char *argv[])
 
 	font = XftFontOpenName(dpy, scr, fonts);
 	th = font->ascent - font->descent;
+	XftColorAllocName(dpy, vis, colormap, fontcolor, &color);
 
 	w = 0;
 	for (i = argi; i < argc; i++) {
@@ -143,16 +144,13 @@ main(int argc, char *argv[])
 	win = XCreateWindow(dpy, RootWindow(dpy, scr), x, y, w, h, borderw,
 	    DefaultDepth(dpy, scr), CopyFromParent, vis,
 	    CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attrs);
-
 	drw = XftDrawCreate(dpy, win, vis, colormap);
-	XftColorAllocName(dpy, vis, colormap, fontcolor, &color);
-
 	XSelectInput(dpy, win, ExposureMask | ButtonPress);
 	XMapWindow(dpy, win);
 
 	sig.sa_handler = sighandler;
 	sig.sa_flags = SA_RESTART;
-	(void)sigemptyset(&sig.sa_mask);
+	(void)sigfillset(&sig.sa_mask);
 	if (sigaction(SIGALRM, &sig, NULL) < 0)
 		err(1, "sigaction(SIGALRM)");
 	if (sigaction(SIGTERM, &sig, NULL) < 0)
@@ -190,5 +188,5 @@ main(int argc, char *argv[])
 	XCloseDisplay(dpy);
 	(void)close(lockfd);
 
-	return 0;
+	return (0);
 }
