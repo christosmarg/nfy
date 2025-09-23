@@ -15,7 +15,7 @@ static const unsigned int borderw = 3;		/* Border width (pixels) */
 static const unsigned int duration = 3;		/* Notification duration (seconds) */
 static const unsigned int pos = TOP_RIGHT;	/* Window position */
 static const unsigned int mx = 10;		/* Margin X (pixels) */
-static const unsigned int my = 10;		/* Margin Y (pixels) */
+static const unsigned int my = 25;		/* Margin Y (pixels) */
 static const unsigned int linespace = 10;	/* Line spacing (pixels) */
 static const char *lockfile = "/tmp/nfy.lock";
 
