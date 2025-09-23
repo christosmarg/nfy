@@ -6,6 +6,7 @@
 .Nd a minimal and daemonless notification program for X
 .Sh SYNOPSIS
 .Nm
+.Op Fl d Ar duraton
 .Op Fl v
 .Sh DESCRIPTION
 .Nm
@@ -24,6 +25,9 @@ This is especially useful inside scripts.
 handles multiple notifications by queuing them using a lock file.
 .Sh OPTIONS
 .Bl -tag -width Ds
+.It Fl d Ar duration
+Specify the duration of the notification. The default duration value is \
+specified in 'config.h'.
 .It Fl v
 prints version to stdout and exits.
 .El

@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -60,7 +61,7 @@ sighandler(int sig)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-v]\n", argv0);
+	fprintf(stderr, "usage: %s [-d duration] [-v]\n", argv0);
 	exit(1);
 }
 
@@ -88,8 +89,15 @@ main(int argc, char *argv[])
 	char buf[MAXLEN+1], ch;
 
 	argv0 = *argv;
-	while ((ch = getopt(argc, argv, "v")) != -1) {
+	while ((ch = getopt(argc, argv, "d:v")) != -1) {
 		switch (ch) {
+		case 'd':
+			duration = strtol(optarg, NULL, 10);
+			if (errno == EINVAL || errno == ERANGE)
+				err(1, "strtol(%s)", optarg);
+			if (duration < 1)
+				errx(1, "duration has to be more than 1 second");
+			break;
 		case 'v':
 			fprintf(stderr, "%s-"VERSION"\n", argv0);
 			exit(1);
