@@ -18,7 +18,7 @@ setup and preferences.
         # make install clean
         $ nfy str...
 
-nfy will be installed in /usr/local/bin by default.
+nfy will be installed in `/usr/local/bin` by default.
 Configuration is done by editing config.h and recompiling
 the source code.
 

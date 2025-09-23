@@ -15,9 +15,9 @@ all: options ${BIN}
 
 options:
 	@echo ${BIN} build options:
-	@echo "CFLAGS   = ${CFLAGS}"
-	@echo "LDFLAGS  = ${LDFLAGS}"
-	@echo "CC       = ${CC}"
+	@echo "CFLAGS	= ${CFLAGS}"
+	@echo "LDFLAGS	= ${LDFLAGS}"
+	@echo "CC	= ${CC}"
 
 ${BIN}: ${OBJ}
 	${CC} ${LDFLAGS} ${OBJ} -o $@
