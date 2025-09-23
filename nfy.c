@@ -56,6 +56,7 @@ main(int argc, char *argv[])
         XRRScreenResources *screens;
         XRRCrtcInfo *info = NULL;
         struct sigaction sig;
+        pid_t pid;
         int scr, scrw, scrh;
         int x, y, w, h, th;
         int i, j, len;
@@ -65,6 +66,18 @@ main(int argc, char *argv[])
 
         if (!(dpy = XOpenDisplay(NULL)))
                 die("cannot open display");
+
+        pid = fork();
+        if (pid < 0)
+                die("fork:");
+        if (pid > 0)
+                exit(EXIT_SUCCESS);
+        umask(0);
+        if (setsid() < 0)
+                die("setsid:");
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
 
         scr = DefaultScreen(dpy);
         screens = XRRGetScreenResources(dpy, RootWindow(dpy, scr));
@@ -133,6 +146,7 @@ main(int argc, char *argv[])
         sigaction(SIGALRM, &sig, 0);
         sigaction(SIGTERM, &sig, 0);
         sigaction(SIGINT, &sig, 0);
+        /* XXX: replace with just singal? */
 
         if (duration > 0)
                 alarm(duration);
