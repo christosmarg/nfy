@@ -6,19 +6,18 @@
 .Nd a minimal and daemonless notification program for X
 .Sh SYNOPSIS
 .Nm
+.Op Fl v
 .Ar str...
 .Sh DESCRIPTION
 .Pp
 .Nm
-creates a temporary notification popup window and displays
-all the arguments that were passed to it. It uses the
-.Xr Xft 3
-library to render fonts and colors, and
-.Xr Xrandr 3
-to handle screen sizes.
-.Pp
-All configuration is done by
-editing the 'config.h' file in the source code.
+creates a temporary notification popup window and displays all the arguments 
+that were passed to it. Configuration is done by editing the 'config.h' file 
+in the source code.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl v
+prints version to stdout and exits.
 .Sh USAGE
 .Pp
 If the string is not surrounded in quotes,
@@ -30,9 +29,10 @@ has a non-blocking behaviour, meaning that commands
 coming after it can execute normally without them having
 to wait for 
 .Nm
-to finish first. This is helpful since it's a notification
-program and there's no reason to wait for the notification
-to die off before other commands can execute.
+to finish first. This is especially helpful inside scripts.
+.Pp
+.Nm
+handles multiple notifications by queuing them using a lock file.
 .Sh SIGNALS
 .Nm
 handles only SIGALRM, SIGTERM and SIGINT. It receives a
@@ -40,6 +40,11 @@ SIGALRM signal by default after the specified duration
 of the notification.
 .Sh SEE ALSO
 .Xr signal 3 ,
-.Xr alarm 3
+.Xr alarm 3 ,
+.Xr fcntl 3 ,
+.Xr Xft 3 ,
+.Xr Xrandr 3
+.Sh BUGS
+Perhaps.
 .Sh AUTHORS
 .An Christos Margiolis Aq Mt christos@christosmarg.xyz

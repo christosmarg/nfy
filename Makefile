@@ -26,28 +26,28 @@ ${BIN}: ${OBJ}
 	${CC} -c ${CFLAGS} $<
 
 dist: clean
-	${MKDIR} ${DIST}
-	${CP} -R nfy.c config.h Makefile config.mk ${DIST}
-	${TAR} ${DIST}.tar ${DIST}
-	${GZIP} ${DIST}.tar
-	${RM_DIR} ${DIST}
+	mkdir -p ${DIST}
+	cp -R config.h config.mk LICENSE Makefile nfy.1 nfy.c README ${DIST}
+	tar -cf ${DIST}.tar ${DIST}
+	gzip ${DIST}.tar
+	rm -rf ${DIST}
 
 run:
 	./${BIN}
 
 install: all
-	${MKDIR} ${DESTDIR}${BIN_DIR} ${DESTDIR}${MAN_DIR}
-	${CP} ${BIN} ${BIN_DIR}
-	${CP} ${MAN1} ${DESTDIR}${MAN_DIR}
-	sed "s/VERSION/${VERSION}/g" < ${MAN1} > ${DESTDIR}${MAN_DIR}/${MAN1}
-	chmod 755 ${DESTDIR}${BIN_DIR}/${BIN}
-	chmod 644 ${DESTDIR}${MAN_DIR}/${MAN1}
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${MANPREFIX}/man1
+	cp -f ${BIN} ${DESTDIR}${PREFIX}/bin
+	cp -f ${MAN1} ${DESTDIR}${MANPREFIX}/man1
+	sed "s/VERSION/${VERSION}/g" < ${MAN1} > ${DESTDIR}${MANPREFIX}/man1/${MAN1}
+	chmod 755 ${DESTDIR}${PREFIX}/bin/${BIN}
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/${MAN1}
 
 uninstall:
-	${RM} ${DESTDIR}${BIN_DIR}/${BIN}
-	${RM} ${DESTDIR}${MAN_DIR}/${MAN1}
+	rm -f ${DESTDIR}${PREFIX}/bin/${BIN} \
+		${DESTDIR}${MANPREFIX}/man1/${MAN1}
 
 clean:
-	${RM} ${BIN} ${OBJ} ${DIST}.tar.gz
+	rm -f ${BIN} ${OBJ} ${DIST}.tar.gz *.core
 
 .PHONY: all options clean dist install uninstall run

@@ -10,7 +10,7 @@ Dependencies:
 - libXrandr
 
 Usage:
------
+------
 Edit config.mk and config.h to match your particular
 setup and preferences.
 
