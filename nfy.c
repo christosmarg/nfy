@@ -101,10 +101,8 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (isatty(STDIN_FILENO)) {
-		warnx("stdin is empty");
-		return (0);
-	}
+	if (isatty(STDIN_FILENO))
+		errx(1, "stdin is empty");
 
 	/* detach from tty */
 	if ((pid = fork()) < 0)
