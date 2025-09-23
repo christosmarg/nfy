@@ -1,16 +1,22 @@
-nfy - a minimal notification program for X
-==========================================
+nfy - a minimal and daemonless notification program for X
+=========================================================
 nfy creates a temporary notification popup window and displays
 all the arguments that were passed to it.
 
+Dependencies:
+-------------
+- Xlib
+- libXft
+- libXrandr
+
 Usage:
 -----
-First of all, edit config.mk and config.h to match your particular
+Edit config.mk and config.h to match your particular
 setup and preferences.
 
         $ make
-        # make install
-        nfy str...
+        # make install clean
+        $ nfy str...
 
 nfy will be installed in /usr/local/bin by default.
 Configuration is done by editing config.h and recompiling

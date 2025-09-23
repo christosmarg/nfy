@@ -1,5 +1,5 @@
 # See LICENSE file for copyright and license details.
-# nfy - minimal notification program
+# nfy - a minimal and daemonless notification program for X
 .POSIX:
 
 include config.mk
