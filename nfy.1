@@ -7,44 +7,38 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl v
-.Ar str...
 .Sh DESCRIPTION
+.Nm
+reads input from stdin (only), creates a temporary popup window and \
+displays it. Configuration is done by editing the 'config.h' file in the \
+source code.
 .Pp
 .Nm
-creates a temporary notification popup window and displays all the arguments 
-that were passed to it. Configuration is done by editing the 'config.h' file 
-in the source code.
+has non-blocking behaviour, meaning that commands coming after it can execute \
+normally without them having to wait for
+.Nm
+to finish first.
+This is especially useful inside scripts.
+.Pp
+.Nm
+handles multiple notifications by queuing them using a lock file.
 .Sh OPTIONS
 .Bl -tag -width Ds
 .It Fl v
 prints version to stdout and exits.
-.Sh USAGE
-.Pp
-If the string is not surrounded in quotes,
-.Nm
-will print one line for each word.
-.Pp
-.Nm
-has a non-blocking behaviour, meaning that commands
-coming after it can execute normally without them having
-to wait for 
-.Nm
-to finish first. This is especially helpful inside scripts.
-.Pp
-.Nm
-handles multiple notifications by queuing them using a lock file.
+.El
 .Sh SIGNALS
 .Nm
-handles only SIGALRM, SIGTERM and SIGINT. It receives a
-SIGALRM signal by default after the specified duration 
+handles only SIGALRM, SIGTERM and SIGINT.
+It receives a SIGALRM signal by default after the specified duration \
 of the notification.
 .Sh SEE ALSO
-.Xr signal 3 ,
+.Xr fcntl 2 ,
 .Xr alarm 3 ,
-.Xr fcntl 3 ,
+.Xr signal 3 ,
 .Xr Xft 3 ,
 .Xr Xrandr 3
-.Sh BUGS
-Perhaps.
 .Sh AUTHORS
 .An Christos Margiolis Aq Mt christos@margiolis.net
+.Sh BUGS
+Perhaps.
