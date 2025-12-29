@@ -1,6 +1,6 @@
 # See LICENSE file for copyright and license details.
 # nfy version
-VERSION = 0.2
+VERSION = 0.3
 
 # paths
 PREFIX = /usr/local

@@ -16,6 +16,7 @@ static const unsigned int pos = TOP_RIGHT;	/* Window position */
 static const unsigned int mx = 10;		/* Margin X (pixels) */
 static const unsigned int my = 25;		/* Margin Y (pixels) */
 static const unsigned int linespace = 10;	/* Line spacing (pixels) */
+static const unsigned int tablen = 8;		/* Tab length (characters) */
 static const char *lockfile = "/tmp/nfy.lock";
 
 #endif /* _NFY_CONFIG_H_ */

@@ -150,7 +150,13 @@ main(int argc, char *argv[])
 	if ((lines = malloc(sizeof(struct line))) == NULL)
 		err(1, "malloc");
 	while (read(STDIN_FILENO, &ch, 1) > 0) {
-		buf[len++] = ch;
+		if (ch == '\t') {
+			/* Handle tabs. */
+			for (i = 0; i < tablen; i++)
+				buf[len++] = ' ';
+		} else {
+			buf[len++] = ch;
+		}
 		if (ch == '\n' || len == MAXLEN) {
 			/* FIXME: is this stupid? */
 			if (ch == '\n')
